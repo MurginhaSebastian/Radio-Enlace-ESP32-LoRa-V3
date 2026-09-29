@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import datetime
 from typing import Optional
 from app.models.telemetry_model import TelemetryPacket, SystemStatus
@@ -25,13 +26,11 @@ def link_quality(rssi: float, snr: float) -> str:
 
 
 def distance_approx(rssi: float, freq_mhz: float = 915.0, tx_power: float = 14.0) -> float:
-    dbm = abs(rssi)
-    if dbm <= tx_power:
+    # Perdida de trayecto = potencia transmitida - potencia recibida (FSPL, sin ganancias de antena).
+    path_loss = tx_power - rssi
+    if path_loss <= 0:
         return 0.0
-    fspl = dbm - tx_power
-    if fspl <= 0:
-        return 0.0
-    d_km = 10 ** ((fspl - 32.44 - (20 * __import__("math").log10(freq_mhz))) / 20)
+    d_km = 10 ** ((path_loss - 32.44 - 20 * math.log10(freq_mhz)) / 20)
     return round(d_km * 1000, 1)
 
 
