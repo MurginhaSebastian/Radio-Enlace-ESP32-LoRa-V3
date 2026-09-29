@@ -47,7 +47,7 @@ void serialHandlerOnChatReceived(const String& raw) {
   float snr = radioGetLastSNR();
 
   Serial.print("{\"type\":\"chat\",\"message\":\"");
-  Serial.print(pkt.text);
+  serialPrintJsonString(pkt.text);
   Serial.print("\",\"rssi\":");
   Serial.print(rssi);
   Serial.print(",\"snr\":");

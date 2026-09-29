@@ -10,6 +10,19 @@ try:
 except ImportError:
     HAS_PYSERIAL = False
 
+# El firmware guarda el texto del chat en ChatPacket.text[64] (63 bytes utiles).
+CHAT_MAX_BYTES = 60
+
+
+def sanitize_chat_text(text) -> str:
+    """Deja el mensaje en una sola linea y como maximo CHAT_MAX_BYTES bytes UTF-8."""
+    clean = " ".join(str(text).splitlines()).strip()
+    encoded = clean.encode("utf-8")
+    if len(encoded) > CHAT_MAX_BYTES:
+        clean = encoded[:CHAT_MAX_BYTES].decode("utf-8", errors="ignore")
+        print(f"[SERIAL] Mensaje de chat recortado a {CHAT_MAX_BYTES} bytes ({len(encoded)} bytes originales)")
+    return clean
+
 
 class LoRaSerialReader:
     def __init__(self, port: str = None, baudrate: int = 115200, simulated: bool = False):
@@ -39,6 +52,10 @@ class LoRaSerialReader:
         self._on_chat_callback = callback
 
     def send_message(self, text: str):
+        text = sanitize_chat_text(text)
+        if not text:
+            print("[SERIAL] send_message: mensaje de chat vacio, no se envia")
+            return
         if self._serial and self._serial.is_open:
             try:
                 line = f"SEND:{text}\n"

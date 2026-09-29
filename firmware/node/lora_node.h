@@ -59,4 +59,8 @@ String buildAckPayload(uint32_t id, int16_t rssi, float snr, float freqError);
 String buildChatPayload(uint32_t id, const String& text);
 String buildChatAckPayload(uint32_t id);
 
+// Imprime s por Serial escapando '"', '\\' y caracteres de control para que
+// pueda ir dentro de un string JSON sin romper la linea.
+void serialPrintJsonString(const char* s);
+
 #endif

@@ -101,7 +101,7 @@ void telemetryManagerOnDataReceived(const String& raw) {
   Serial.print(",\"frequency_error\":");
   Serial.print(freqErr, 1);
   Serial.print(",\"data\":\"");
-  Serial.print(pkt.payload);
+  serialPrintJsonString(pkt.payload);
   Serial.println("\"}");
 
   if (!radioSendAck(pkt.id, lastRSSI, lastSNR, freqErr)) {

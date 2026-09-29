@@ -43,7 +43,8 @@
     <input
       type="text"
       class="flex-1 bg-dark-700 border border-dark-500 rounded-xl px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 outline-none transition-all duration-200 focus:border-emerald-500/50 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-      placeholder="Escribe un mensaje..."
+      placeholder="Escribe un mensaje (máx. 60 caracteres)..."
+      maxlength="60"
       [(ngModel)]="inputText"
       (keydown)="onKeyEnter($event)"
       autofocus

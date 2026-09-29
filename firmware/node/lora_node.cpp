@@ -150,3 +150,19 @@ String buildChatPayload(uint32_t id, const String& text) {
 String buildChatAckPayload(uint32_t id) {
   return String(LORA_PREFIX_CHAT_ACK) + String(id);
 }
+
+void serialPrintJsonString(const char* s) {
+  for (; *s != '\0'; s++) {
+    char c = *s;
+    if (c == '"' || c == '\\') {
+      Serial.print('\\');
+      Serial.print(c);
+    } else if ((unsigned char)c < 0x20) {
+      char esc[7];
+      snprintf(esc, sizeof(esc), "\\u%04x", (unsigned char)c);
+      Serial.print(esc);
+    } else {
+      Serial.print(c);
+    }
+  }
+}

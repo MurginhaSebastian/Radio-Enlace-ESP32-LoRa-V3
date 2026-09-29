@@ -11,6 +11,22 @@ export interface ChatMessage {
 
 const STORAGE_KEY = 'lora_chat_history';
 const MAX_STORED_MESSAGES = 200;
+// El firmware guarda el texto en ChatPacket.text[64]: se limita a 60 bytes UTF-8.
+export const MAX_CHAT_BYTES = 60;
+
+function truncateUtf8(text: string, maxBytes: number): string {
+  const encoder = new TextEncoder();
+  if (encoder.encode(text).length <= maxBytes) return text;
+  let out = '';
+  let bytes = 0;
+  for (const ch of text) {
+    const len = encoder.encode(ch).length;
+    if (bytes + len > maxBytes) break;
+    out += ch;
+    bytes += len;
+  }
+  return out;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
@@ -36,12 +52,15 @@ export class ChatService {
   }
 
   sendMessage(text: string): void {
+    // Lo que se muestra es exactamente lo que llega al otro nodo.
+    const payload = truncateUtf8(text, MAX_CHAT_BYTES);
+    if (!payload) return;
     this.messages.push({
-      text,
+      text: payload,
       direction: 'sent',
       timestamp: new Date(),
     });
-    this.ws.send({ type: 'send_chat', message: text });
+    this.ws.send({ type: 'send_chat', message: payload });
     this.saveToStorage();
   }
 
