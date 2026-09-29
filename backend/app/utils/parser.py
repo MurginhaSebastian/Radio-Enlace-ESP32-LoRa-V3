@@ -44,11 +44,20 @@ def parse_serial_line(line: str) -> Optional[TelemetryPacket]:
     if data.get("type") != "telemetry":
         return None
 
-    rssi = float(data.get("rssi", 0))
-    snr = float(data.get("snr", 0))
-    latency = float(data.get("latency_ms", 0))
-    packet_id = int(data.get("packet_id", 0))
-    freq_err = float(data.get("frequency_error", 0))
+    try:
+        rssi = float(data.get("rssi", 0))
+        snr = float(data.get("snr", 0))
+        # latency_ms solo viene en los paquetes "ack" (RTT); en los "rx" no existe.
+        latency_raw = data.get("latency_ms")
+        latency = float(latency_raw) if latency_raw is not None else None
+        packet_id = int(data.get("packet_id", 0))
+        freq_err = float(data.get("frequency_error", 0))
+    except (TypeError, ValueError) as e:
+        print(f"[PARSER] parse_serial_line: telemetria con campos invalidos ({type(e).__name__}: {e}) -> {line.strip()}")
+        return None
+    # "rx" = DATA recibido del otro nodo, "ack" = confirmacion de un DATA propio.
+    # Sin "src" (firmware legacy o modo simulado) se trata como un unico flujo "rx".
+    source = str(data.get("src", "rx"))
 
     strength = signal_strength_pct(rssi)
     quality = link_quality(rssi, snr)
@@ -65,6 +74,7 @@ def parse_serial_line(line: str) -> Optional[TelemetryPacket]:
         frequency_error_hz=freq_err,
         raw_data=data.get("data", ""),
         timestamp=datetime.now().isoformat(),
+        source=source,
     )
 
 
@@ -79,6 +89,7 @@ def build_status(service_state: dict) -> SystemStatus:
         uptime_seconds=service_state.get("uptime_seconds", 0),
         latest_rssi=service_state.get("latest_rssi"),
         latest_snr=service_state.get("latest_snr"),
+        latest_latency_ms=service_state.get("latest_latency_ms"),
         link_state=service_state.get("link_state", "DESCONOCIDO"),
         timestamp=datetime.now().isoformat(),
     )

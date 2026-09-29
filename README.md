@@ -48,7 +48,10 @@ Tramas de texto con separador `|`. Antes de transmitir se cifran y se envían co
 | CHAT | `CHAT\|<id>\|<texto>` | Mensaje de chat |
 | CHAT_ACK | `CHAT_ACK\|<id>` | Confirma un mensaje de chat |
 
-Cada nodo reporta por el puerto serie una línea JSON por evento (`telemetry`, `heartbeat`, `chat`) y acepta el comando `SEND:<texto>` para enviar un mensaje de chat.
+Cada nodo reporta por el puerto serie una línea JSON por evento (`telemetry`, `heartbeat`, `chat`) y acepta el comando `SEND:<texto>` para enviar un mensaje de chat. Los eventos `telemetry` llevan `"src"`:
+
+- `"rx"`: DATA recibido del otro nodo (RSSI/SNR medidos aquí). Con estos se calcula la pérdida de paquetes.
+- `"ack"`: confirmación de un DATA propio (RSSI/SNR medidos por el otro nodo) con la latencia `latency_ms` (RTT).
 
 ## Estructura del repositorio
 
@@ -123,6 +126,8 @@ El cifrado AES-128-CTR (mbedtls) usa una clave precompartida **fija en `firmware
 
 - [`docs/reporte_proyecto.txt`](docs/reporte_proyecto.txt): reporte técnico detallado (módulos, flujo del enlace, fórmulas).
 - [`docs/Informe_Tecnico_Proyecto_LoRa.docx`](docs/Informe_Tecnico_Proyecto_LoRa.docx): informe técnico con marco teórico.
+
+Estos documentos describen el formato serie anterior: hoy los eventos `telemetry` incluyen `src` y `latency_ms` solo aparece en los `ack`.
 
 ## Créditos
 

@@ -2,13 +2,14 @@ export interface TelemetryPacket {
   packet_id: number;
   rssi: number;
   snr: number;
-  latency_ms: number;
+  latency_ms: number | null;
   signal_strength_pct: number;
   link_quality: string;
   distance_approx_m: number;
   frequency_error_hz: number;
   raw_data: string;
   timestamp: string;
+  source?: string; // 'rx' = DATA del otro nodo, 'ack' = confirmacion de un DATA propio
 }
 
 export interface SystemState {
@@ -21,5 +22,6 @@ export interface SystemState {
   uptime_seconds: number;
   latest_rssi: number | null;
   latest_snr: number | null;
+  latest_latency_ms?: number | null;
   link_state: string;
 }

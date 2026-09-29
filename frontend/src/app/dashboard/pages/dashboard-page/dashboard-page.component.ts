@@ -203,7 +203,7 @@ interface IndicatorInfo {
                          [style.left.%]="latencyBarPct"></div>
                   </div>
                   <div class="flex justify-between text-[8px] text-gray-600 font-mono mt-0.5">
-                    <span>0ms</span><span>20ms</span><span>50ms</span><span>100ms</span>
+                    <span>0ms</span><span>250ms</span><span>500ms</span>
                   </div>
                   <div *ngIf="selectedIndicator === 'latency'" class="indicator-detail">
                     <div class="pt-2.5 mt-2.5 border-t border-dark-500/60">
@@ -382,11 +382,11 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
       ],
     },
     latency: {
-      desc: 'Tiempo de tr\u00e1nsito del paquete desde TX hasta RX, calculado comparando timestamps del transmisor y receptor. Incluye procesamiento en ambos nodos y propagaci\u00f3n LoRa.',
+      desc: 'Tiempo de ida y vuelta (RTT) medido por el firmware: desde que termina de enviarse un DATA hasta que llega su ACK. En LoRa SF7 / 125 kHz el ACK ocupa unos 70 ms de aire, as\u00ed que 80\u2013120 ms es lo normal; sube si el otro nodo estaba transmitiendo.',
       ranges: [
-        { label: '\u226420ms EXCELENTE', quality: 'EXCELENTE' },
-        { label: '\u226450ms BUENA', quality: 'BUENA' },
-        { label: '>50ms REGULAR', quality: 'REGULAR' },
+        { label: '\u2264120ms EXCELENTE', quality: 'EXCELENTE' },
+        { label: '\u2264250ms BUENA', quality: 'BUENA' },
+        { label: '>250ms REGULAR', quality: 'REGULAR' },
       ],
     },
     signal: {
@@ -411,7 +411,11 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
   get rssiDisplay(): string | number { return this.latestPacket?.rssi ?? '--'; }
   get snrDisplay(): string { return this.latestPacket?.snr != null ? this.latestPacket.snr.toFixed(1) : '--'; }
   get packetLossDisplay(): number { return this.systemState?.packet_loss_pct ?? 0; }
-  get latencyDisplay(): string | number { return this.latestPacket?.latency_ms != null ? Math.round(this.latestPacket.latency_ms) : '--'; }
+  // La latencia (RTT) solo llega en los paquetes 'ack': se usa la ultima conocida del backend.
+  get latencyDisplay(): string | number {
+    const lat = this.systemState?.latest_latency_ms;
+    return lat != null ? Math.round(lat) : '--';
+  }
 
   get qualityRSSI(): string { return this.latestPacket?.link_quality ?? '--'; }
   get qualitySNR(): string {
@@ -429,9 +433,10 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     return 'CRITICA';
   }
   get qualityLatency(): string {
-    const lat = this.latestPacket?.latency_ms ?? 999;
-    if (lat <= 20) return 'EXCELENTE';
-    if (lat <= 50) return 'BUENA';
+    const lat = this.systemState?.latest_latency_ms;
+    if (lat == null) return '--';
+    if (lat <= 120) return 'EXCELENTE';
+    if (lat <= 250) return 'BUENA';
     return 'REGULAR';
   }
 
@@ -447,8 +452,9 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     return Math.max(0, Math.min(100, this.systemState?.packet_loss_pct ?? 0));
   }
   get latencyBarPct(): number {
-    if (!this.latestPacket) return 0;
-    return Math.max(0, Math.min(100, (this.latestPacket.latency_ms / 100) * 100));
+    const lat = this.systemState?.latest_latency_ms;
+    if (lat == null) return 0;
+    return Math.max(0, Math.min(100, (lat / 500) * 100));
   }
   get signalBarPct(): number {
     return Math.max(0, Math.min(100, this.latestPacket?.signal_strength_pct ?? 0));

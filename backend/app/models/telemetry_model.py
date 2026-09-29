@@ -7,13 +7,14 @@ class TelemetryPacket(BaseModel):
     packet_id: int
     rssi: float
     snr: float
-    latency_ms: float
+    latency_ms: Optional[float] = None
     signal_strength_pct: float
     link_quality: str
     distance_approx_m: float
     frequency_error_hz: float
     raw_data: str
     timestamp: str
+    source: str = "rx"
 
 
 class SystemStatus(BaseModel):
@@ -26,6 +27,7 @@ class SystemStatus(BaseModel):
     uptime_seconds: int
     latest_rssi: Optional[float] = None
     latest_snr: Optional[float] = None
+    latest_latency_ms: Optional[float] = None
     link_state: str
     timestamp: str
 

@@ -89,12 +89,13 @@ void telemetryManagerOnDataReceived(const String& raw) {
   float freqErr = radioGetLastFreqError();
   lastPacketId = pkt.id;
 
+  // src "rx": DATA del otro nodo (su contador de IDs); aqui no se puede medir latencia.
   Serial.print("{\"type\":\"telemetry\"");
+  Serial.print(",\"src\":\"rx\"");
   Serial.print(",\"rssi\":");
   Serial.print(lastRSSI);
   Serial.print(",\"snr\":");
   Serial.print(lastSNR, 1);
-  Serial.print(",\"latency_ms\":0");
   Serial.print(",\"packet_id\":");
   Serial.print(pkt.id);
   Serial.print(",\"frequency_error\":");
@@ -115,18 +116,23 @@ void telemetryManagerOnAckReceived(const String& raw) {
   }
 
   unsigned long latency = 0;
-  if (!rttTableTakeLatency(pkt.id, latency)) {
+  bool hasLatency = rttTableTakeLatency(pkt.id, latency);
+  if (!hasLatency) {
     Serial.print("[WARN] telemetryManagerOnAckReceived: ACK sin envio pendiente registrado, id=");
     Serial.println(pkt.id);
   }
 
+  // src "ack": confirmacion de un DATA propio (contador de IDs de este nodo) con el RTT medido.
   Serial.print("{\"type\":\"telemetry\"");
+  Serial.print(",\"src\":\"ack\"");
   Serial.print(",\"rssi\":");
   Serial.print(pkt.rssi);
   Serial.print(",\"snr\":");
   Serial.print(pkt.snr, 1);
-  Serial.print(",\"latency_ms\":");
-  Serial.print(latency);
+  if (hasLatency) {
+    Serial.print(",\"latency_ms\":");
+    Serial.print(latency);
+  }
   Serial.print(",\"packet_id\":");
   Serial.print(pkt.id);
   Serial.print(",\"frequency_error\":");

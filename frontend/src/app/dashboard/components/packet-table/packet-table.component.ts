@@ -14,6 +14,7 @@ import { TelemetryPacket } from '../../../core/models/telemetry.interface';
           <thead>
             <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-dark-500">
               <th class="text-left py-2 pr-2">ID</th>
+              <th class="text-left py-2 pr-2" title="RX: DATA del otro nodo (medido aqui) · ACK: confirmacion de un DATA propio (medido por el otro nodo)">Tipo</th>
               <th class="text-left py-2 pr-2">RSSI</th>
               <th class="text-left py-2 pr-2">SNR</th>
               <th class="text-left py-2 pr-2">Lat.(ms)</th>
@@ -23,6 +24,7 @@ import { TelemetryPacket } from '../../../core/models/telemetry.interface';
           <tbody>
             <tr *ngFor="let p of packets" class="border-b border-dark-500/50 hover:bg-dark-600/30 transition-colors">
               <td class="py-1.5 pr-2 font-mono text-gray-400">{{ p.packet_id }}</td>
+              <td class="py-1.5 pr-2 font-mono text-xs text-gray-500">{{ p.source === 'ack' ? 'ACK' : 'RX' }}</td>
               <td class="py-1.5 pr-2 font-mono"
                   [ngClass]="{
                     'link-excellent': p.rssi >= -60,
@@ -30,7 +32,7 @@ import { TelemetryPacket } from '../../../core/models/telemetry.interface';
                     'link-critical': p.rssi < -100
                   }">{{ p.rssi }}</td>
               <td class="py-1.5 pr-2 font-mono">{{ p.snr | number:'1.1-1' }}</td>
-              <td class="py-1.5 pr-2 font-mono text-gray-400">{{ p.latency_ms | number:'1.0-0' }}</td>
+              <td class="py-1.5 pr-2 font-mono text-gray-400">{{ p.latency_ms != null ? (p.latency_ms | number:'1.0-0') : '--' }}</td>
               <td class="py-1.5">
                 <span [ngClass]="{
                   'badge-excellent': p.link_quality === 'EXCELENTE',
